@@ -9,12 +9,25 @@ import random
 
 
 def do_training_test_split(data, split_by_column, num_splits, split_ratio, random_state):
+    """
+    Objective:
+                Split pandas dataset into training and test sets, in a stratified sampling way.
+
+    Parameters:
+                data            : the pandas dataset to be splitted
+                split_by_column : a string, the column name from the dataset whose distribution of values to use 
+                                    as basis for the stratified splitting.
+                num_splits      : integer number of reshuffling and splitting iterations
+                split_ratio     : a float, ratio between dimension of test set and training set
+                random_state    : an integer, a seed to use for the random splitting
+
+    Returns:
+                two pandas dataframes: the first is a training set, and the second is the test set.
+    """
     stratified_training_set     = []
     stratified_test_set         = []
     split_instance = StratifiedShuffleSplit(n_splits=num_splits, test_size=split_ratio, random_state=random_state)
     for train_index, test_index in split_instance.split(data, data[split_by_column]):
-        #print("len(train_index) = {}".format(len(train_index)))
-        #print("train_index = {}".format(train_index))
         stratified_training_set     = data.loc[train_index]
         stratified_test_set         = data.loc[test_index]
     return stratified_training_set, stratified_test_set
@@ -29,14 +42,10 @@ def main():
                                                                           num_splits=1,
                                                                           split_ratio=0.2,
                                                                           random_state=1024)
-    #print(dataset.head())
     stratified_training_set             = strat_training_set.to_numpy()
     stratified_training_set_predictors  = stratified_training_set[:,1:3]
     stratified_training_set_labels      = stratified_training_set[:,3]
     strat_training_set                  = []
-    #print("stratified_training_set_predictors[-1]:")
-    #print(stratified_training_set_predictors[-1])
-    #quit()
 
     stratified_test_set                 = strat_test_set.to_numpy()
     stratified_test_set_predictors      = stratified_test_set[:,1:3]
@@ -44,7 +53,8 @@ def main():
     strat_test_set                      = []
 
 
-    m = random.randint(1,100000)
+    m = random.randint(1,10**7)
+    #m = 2
     def v_vector(s=63):
         w_seed    = np.random.RandomState(seed=s)
         return w_seed.normal(loc=0.0, scale=0.1, size=1 + np.shape(stratified_training_set_predictors)[1])
@@ -55,13 +65,13 @@ def main():
         print('{:s}'.format('\u0333'.join(" # passes = {}:".format(2**n))))
         model = perceptron(data_predictors=stratified_training_set_predictors,
                        data_labels=stratified_training_set_labels,
-                       eta=0.1,
+                       learning_rate=0.1,
                        threshold_value=0,
                        thresh_pass=1.0,
                        thresh_fail=-1.0,
                        initial_weights=v_vector,
                        random_seed=63,
-                       n_passes=2**n)
+                       n_epochs=2**n)
         model.fit_and_print_accuracy(X_test=stratified_test_set_predictors,
                                      Y_test=stratified_test_set_labels,
                                      w_update_method=2,
@@ -85,19 +95,19 @@ def main():
     
     models = [ perceptron(data_predictors=stratified_training_set_predictors,
                        data_labels=stratified_training_set_labels,
-                       eta=10**(-6),
+                       learning_rate=10**(-6),
                        threshold_value=0,
                        thresh_pass=1.0,
                        thresh_fail=-1.0,
                        initial_weights=v_vector(),
                        random_seed=63,
-                       n_passes=n+1) for n in range(100) ]
+                       n_epochs=n+1) for n in range(100) ]
     
     for model in models:
         run_model(model)       
 
-    n_passes = [n+1 for n in range(100)]
-    plt.plot(n_passes, accuracy_list)
+    n_epochs = [n+1 for n in range(100)]
+    plt.plot(n_epochs, accuracy_list)
     plt.show()"""
     
 
@@ -105,13 +115,15 @@ def main():
 
     accuracy_dict = {
         1   : [],
-        2   : []
+        2   : [],
+        3   : []
     }
 
     max_power = 500
     n_base = 2
     n_method = 1
-    while n_method in [1,2]:
+    eta_value = 10**(-6)
+    while n_method in [1,2,3]:
         w_vector    = v_vector(m)
         print("m seed = ", m)
         n = 0
@@ -126,13 +138,13 @@ def main():
             print("c = {}".format(c))
             model = perceptron(data_predictors=stratified_training_set_predictors,
                                data_labels=stratified_training_set_labels,
-                               eta=10**(-5),
+                               learning_rate=eta_value,
                                threshold_value=0,
                                thresh_pass=1.0,
                                thresh_fail=-1.0,
                                initial_weights=w_vector,
                                random_seed=None,
-                               n_passes=1)
+                               n_epochs=1)
             model.fit_and_print_accuracy(X_test=stratified_test_set_predictors,
                                      Y_test=stratified_test_set_labels,
                                      w_update_method=n_method,
@@ -152,12 +164,15 @@ def main():
     #print("accuracy_dict[1] = {}".format(np.round(np.array(accuracy_dict[1]),4)))
     #print("accuracy_dict[2] = {}".format(np.round(np.array(accuracy_dict[2]),4)))
 
-    #n_passes = [n_base**n for n in range(max_power)]
-    n_passes = [n+1 for n in range(max_power)]
-    plt.plot(n_passes, accuracy_dict[1], 'b')
-    plt.plot(n_passes, accuracy_dict[2], 'r')
+    #n_epochs = [n_base**n for n in range(max_power)]
+    n_epochs = [n+1 for n in range(max_power)]
+    plt.plot(n_epochs, accuracy_dict[1], c='b', label='method 1, seed = {}'.format(m))
+    plt.plot(n_epochs, accuracy_dict[2], c='r', label='method 2, seed = {}'.format(m))
+    plt.plot(n_epochs, accuracy_dict[3], c='k', label='method 3, seed = {}'.format(m))
     plt.xlabel("n-th epoch")
     plt.ylabel("No. weight updates")
+    plt.legend()
+    plt.title("eta = {}".format(eta_value))
     plt.show()
 
 
