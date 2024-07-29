@@ -60,6 +60,7 @@ class perceptron:
         self.__num_columns      = None
         self.__run_successfully = False
         self.__success_cases    = None
+        self.__width            = 40
 
 
     """def __del__(self):
@@ -325,7 +326,7 @@ class perceptron:
         x = self.data_predictors[n]
         z = self.calculate_net_input(self.__current_weights,self.data_predictors[n])
         y_predicted = self.evaluate_threshold_function(z)
-        y_label = self.Y_label[n]
+        y_label     = self.Y_label[n]
         if y_predicted-y_label==0.0:
             self.__success_cases+=1
         w_update_func(y_label=y_label,
@@ -366,8 +367,8 @@ class perceptron:
 
         """ 
         self.__get_data_dimension(self.data_predictors)
-        iteration_step = 0
-        self.__success_cases = 0
+        iteration_step          = 0
+        self.__success_cases    = 0
         self.max_iterations = self.__num_rows*self.n_epochs
         dummy = [self.__run_perceptron_iter(iteration_step, w_update_func) for iteration_step in range(self.max_iterations)]
         if len(dummy)==self.max_iterations:
@@ -409,7 +410,8 @@ class perceptron:
                     (implicit) None
         """ 
         if self.__run_successfully:
-            print("Final weight vector is: {}".format(np.round(self.__current_weights, n_decimals)))
+            m_string = '{0: <{width}}'.format("Final weight vector", width=self.__width)
+            print(m_string + ":", np.round(self.__current_weights, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print weights.")
 
@@ -458,7 +460,8 @@ class perceptron:
                     (implicit) None
         """ 
         if self.__run_successfully:
-            print("Success rate during training = {}".format(round(self.__success_cases/self.max_iterations, n_decimals)))
+            m_string = '{0: <{width}}'.format("Success rate during training", width=self.__width)
+            print(m_string + ":", round(self.__success_cases/self.max_iterations, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print success rate.")
 
@@ -479,6 +482,7 @@ class perceptron:
         -------
                     (implicit) None
         """ 
+        print("Running perceptron ...\n")
         w_chosen_func = self.__choose_w_update_func(w_update_method)
         self.__run_perceptron(w_update_func=w_chosen_func)
         self.print_optimized_weights(n_decimals=n_digits)
@@ -519,7 +523,7 @@ class perceptron:
         -------
                     Y_predicted : a 1D array (of dimension R) of binary values for the target feature.
         """ 
-        N = np.shape(X)[0]
+        N           = np.shape(X)[0]
         Y_predicted = np.array([self.single_predict(w,X[i]) for i in range(N)])
         return Y_predicted
     
@@ -540,9 +544,9 @@ class perceptron:
         -------
                     accuracy    : a float between 0 and 1 (extrema included).
         """ 
-        error_array = np.subtract(Y_label, Y_predicted)
-        dim_test    = np.shape(error_array)[0]
-        self.accuracy = (dim_test - np.count_nonzero(error_array))/dim_test
+        error_array     = np.subtract(Y_label, Y_predicted)
+        dim_test        = np.shape(error_array)[0]
+        self.accuracy   = (dim_test - np.count_nonzero(error_array))/dim_test
         return self.accuracy
     
     def get_accuracy(self, n_decimals=4):
@@ -598,7 +602,9 @@ class perceptron:
                     (implicit) None
         """ 
         self.fit(w_update_method=w_update_method, n_digits=n_digits)
-        weight_vector = self.get_optimized_weights()
-        Y_predicted = self.array_predict(weight_vector, X_test)
-        accuracy = self.calculate_accuracy(Y_test, Y_predicted)
-        print("Accuracy = {}".format(round(accuracy,n_digits)))
+        weight_vector   = self.get_optimized_weights()
+        Y_predicted     = self.array_predict(weight_vector, X_test)
+        accuracy        = self.calculate_accuracy(Y_test, Y_predicted)
+        m_string        = '{0: <{width}}'.format("Accuracy", width=self.__width)
+        print(m_string + ":", round(accuracy,n_digits))
+        print("\n")
