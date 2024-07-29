@@ -52,13 +52,14 @@ class perceptron:
         self.random_seed        = random_seed
         self.n_epochs           = n_epochs
         self.max_iterations     = None
+        self.update_per_epoch   = []
         self.accuracy           = None
+        self.final_weights      = None
         self.__current_weights  = None
         self.__num_rows         = None
         self.__num_columns      = None
         self.__run_successfully = False
         self.__success_cases    = None
-        self.update_per_epoch   = []
 
 
     """def __del__(self):
@@ -387,7 +388,8 @@ class perceptron:
                     __current_weights: a 1D numpy array of the final learned weights. 
                     -1               : if "__run_perceptron" wasn't successfully run.
         """ 
-        return self.__current_weights if self.__run_successfully else -1
+        self.final_weights = self.__current_weights
+        return self.final_weights if self.__run_successfully else -1
         
     def print_optimized_weights(self, n_decimals=4):
         """
