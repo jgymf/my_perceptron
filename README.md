@@ -47,7 +47,7 @@ Usually, one runs steps 2 to 5 sequentially through the $N$ training samples and
 In this implementation, the halting condition in step 6 is if the learning has been repeated on the training set $X$ for a given $\nu$ times.
 
 ## The difference between this implementation and others that have come before it
-The perceptron learning rule is implemented here as a class. The class offers three different updating rules for the bias unit $w_0$ and the weight vector $W$, and this is what makes this implementation different. The user can choose which method to use. They are as follows:
+The perceptron learning rule is implemented here as a class (see the file "perceptron.py"). The class offers three different updating rules for the bias unit $w_0$ and the weight vector $W$, and this is what makes this implementation different. The user can choose which method to use. They are as follows:
 ### Method 1:
 The updating rule is the original by Rosenblatt, i.e., the equations in step 5 above.
 ### Method 2:
@@ -63,3 +63,4 @@ Here, the updating rules are:
 The hyperbolic tangent function here introduces a high degree of non-linearity in the updating of the weight vector. Note, however, that for $\eta \cdot \epsilon(i) X^T_{i\bullet} \to 0 $, Methods 2 and 3 essentially reduce to Method 1.
 
 ## Applications
+We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
