@@ -63,6 +63,10 @@ def main():
     stratified_test_set_predictors      = stratified_test_set[:,1:3]
     stratified_test_set_labels          = stratified_test_set[:,3]
     strat_test_set                      = []
+    """print("number of test samples with severity = -1:")
+    neg = np.count_nonzero(stratified_test_set_labels==-1)
+    print(neg)
+    print("expected accuracy = ", neg/len(stratified_test_set_labels)," or ", 1-neg/len(stratified_test_set_labels))"""
 
     # setting additional parameters before running the perceptron
     # eta_value is the learning rate
@@ -128,7 +132,7 @@ def main():
                         title                   = None,
                         show                    = False)
     
-    plot_data_as_binary(data=dataset,
+    plot_data_as_binary(data                    = dataset,
                         predictive_column_names = ["eruptions", "waiting"],
                         target_column_name      = "severe",
                         thresh_pass             = 1,
