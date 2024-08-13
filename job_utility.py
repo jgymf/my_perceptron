@@ -2,7 +2,26 @@ import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import matplotlib.pyplot as plt
 import copy
+import pandas as pd
 
+def standardize(np_dataset):
+    np_dataset      = np.squeeze(np_dataset)
+    dataset_        = np.copy(np_dataset)
+    if dataset_.ndim == 1:
+        dataset_ = (np_dataset - np_dataset.mean())/np_dataset.std()
+    else:
+        num_columns = np.shape(dataset_)[1]
+        for n_col in range(num_columns):
+            dataset_[:,n_col] = np.divide(np.subtract(np_dataset[:,n_col], np_dataset[:,n_col].mean()),np_dataset[:,n_col].std())
+    return dataset_
+
+def standardize_pandas(pd_data, list_column_names):
+    c_data              = pd_data.copy(deep=True)
+    for col in list_column_names:
+        mean            = pd_data[col].mean()
+        std             = pd_data[col].std()
+        c_data[col]     = pd_data[col].transform(lambda x: (x-mean)/std)
+    return c_data
 
 def run_full_analysis(model_obj,
                       methods,
@@ -13,11 +32,13 @@ def run_full_analysis(model_obj,
                       n_decimals=4):
     epochs_update_dict          = {}
     Final_weights               = {}
+    SSE_vector                  = {}
     N_methods                   = len(methods)
 
     for n in range(N_methods):
         epochs_update_dict[n+1] = []
         Final_weights[n+1]      = []
+        SSE_vector[n+1]         = []
     
     # create a list of indices corresponding to the epoch numbers.
     # subtracting 1 because indexing in Python starts at 0. 
@@ -29,6 +50,8 @@ def run_full_analysis(model_obj,
         # make deep copy of object
         Z = copy.deepcopy(model_obj)
         Z.initial_weights   = w0
+        #print("Initial weights = ", Z.initial_weights)
+            
         Z.n_epochs          = epochs_list[-1]
         # train perceptron on data, test the final weights on the test set and print accuracy to console
         Z.fit_and_print_accuracy(X_test         = X_test_data,
@@ -38,9 +61,11 @@ def run_full_analysis(model_obj,
                                 )
         # get number of times the weight vector was updated for the interested epoch numbers 
         # and store in epochs_update_dict for the corresponding method number.
+        #print("get_update_per_epoch = ", Z.get_update_per_epoch())
         epochs_update_dict[n_method]= copy.deepcopy(Z.get_update_per_epoch()[indices])
-        Final_weights[n_method]=copy.deepcopy(Z.get_optimized_weights())
-    return epochs_update_dict, Final_weights
+        Final_weights[n_method]     = copy.deepcopy(Z.get_optimized_weights())
+        SSE_vector[n_method]        = copy.deepcopy(Z.get_SSE_per_epoch())
+    return epochs_update_dict, Final_weights, SSE_vector
 
 
 def w0_vector(num_features, seed_value=63):
@@ -103,6 +128,7 @@ def plot_data_as_binary(data,
                         positive_plot_label,
                         negative_plot_label,
                         title,
+                        do_standardize=False,
                         show=True):
     """
     Objective:
@@ -127,13 +153,13 @@ def plot_data_as_binary(data,
     --------
                 None
     """
-    X_positive = data[predictive_column_names[0]].where(data[target_column_name]==thresh_pass)
-    X_negative = data[predictive_column_names[0]].where(data[target_column_name]==thresh_fail)
-    Y_positive = data[predictive_column_names[1]].where(data[target_column_name]==thresh_pass)
-    Y_negative = data[predictive_column_names[1]].where(data[target_column_name]==thresh_fail)
-
-    plt.scatter(X_positive, Y_positive, marker="o", label=positive_plot_label)
-    plt.scatter(X_negative, Y_negative, marker="x", label=negative_plot_label)
+    if do_standardize:
+        data        = standardize_pandas(pd_data            = data, 
+                                         list_column_names  = predictive_column_names)
+    data_positive   = data[predictive_column_names].where(data[target_column_name]==thresh_pass).dropna().to_numpy()
+    data_negative   = data[predictive_column_names].where(data[target_column_name]==thresh_fail).dropna().to_numpy()
+    plt.scatter(data_positive[:,0], data_positive[:,1], marker="o", label=positive_plot_label)
+    plt.scatter(data_negative[:,0], data_negative[:,1], marker="x", label=negative_plot_label)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.legend()
@@ -143,6 +169,7 @@ def plot_data_as_binary(data,
         plt.show()
 
 
+    
 def plot_epoch_updates_per_method(epochs_list,
                                   epochs_update_dict,
                                   learning_rate,
@@ -249,6 +276,25 @@ def plot_decision_lines(x_min,
     y_max_array = [slope[n]*x_max + intercept[n] for n in range(N)]
     P= [plt.plot([x_min, x_max], [y_min_array[n], y_max_array[n]], c=colors_list[n], 
                  label="method {}, seed = {}".format(n+1, seed )) for n in range(N)]
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    if title!=None:
+        plt.title(title)
+    if show:
+        plt.show()
+
+def plot_SSE_per_epoch(SSE_dict,
+                        seed,
+                        epochs_list,
+                        colors_list,
+                        x_label,
+                        y_label,
+                        title=None,
+                        show=True):
+    N = len(SSE_dict)
+    dummy = [plt.plot(epochs_list, SSE_dict[n+1], c=colors_list[n], marker = 'o',
+                          label="method {}, seed = {}".format(n+1, seed)) for n in range(N)]
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.legend()

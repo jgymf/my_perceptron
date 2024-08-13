@@ -12,22 +12,14 @@ def main():
     """
     Objective:
     ----------
-                In this example, we use the perceptron algorithm to classify whether an eruption
-                at the Old Faithful geyser in Yellowstone National Park, Wyoming, USA, is "severe" (coded as +1)
-                or "not severe" (coded as -1).
+                
 
     Description of the dataset
     --------------------------
-                The dataset has the following columns:
-                    # Column        Column name         dytpe           Description \n
-                        0           sample              numeric         Measurement number \n
-                        1           eruptions           numeric         Eruption time in mins \n
-                        2           waiting             numeric         Waiting time to next eruption in mins \n
-                        3           severe              categorical     whether the eruption was "severe" (+1) or not (-1). \n
-                Dataset was downloaded from https://cs.colby.edu/courses/F22/cs343/projects/p1adaline/p1adaline.html.
+            
     """
 
-    file_path = os.path.join("neural_classifier_models","old_faithful.csv")            #user may want to change this
+    file_path = os.path.join("neural_classifier_models","prime_classification_data.csv")            #user may want to change this
     dataset = pd.read_csv(file_path)
 
     # do a binary plot of the dataset. The binary category column is named "severe", 
@@ -47,21 +39,21 @@ def main():
     # do a stratified splitting of the dataset into training ans test sets, using the column "severe" as base
     # for the stratified splitting.
     strat_training_set, strat_test_set  = do_training_test_split(data           = dataset,
-                                                                split_by_column = "severe",
+                                                                split_by_column = "is_prime",
                                                                 num_splits      = 1,
                                                                 split_ratio     = 0.2,
                                                                 random_state    = 1024)
 
     # transform training set into numpy array and split into predictors and target data
     stratified_training_set             = strat_training_set.to_numpy()
-    stratified_training_set_predictors  = stratified_training_set[:,1:3]
-    stratified_training_set_labels      = stratified_training_set[:,3]
+    stratified_training_set_predictors  = stratified_training_set[:,2:66]
+    stratified_training_set_labels      = stratified_training_set[:,66]
     strat_training_set                  = []
 
     # transform test set into numpy array and split into predictors and target data
     stratified_test_set                 = strat_test_set.to_numpy()
-    stratified_test_set_predictors      = stratified_test_set[:,1:3]
-    stratified_test_set_labels          = stratified_test_set[:,3]
+    stratified_test_set_predictors      = stratified_test_set[:,2:66]
+    stratified_test_set_labels          = stratified_test_set[:,66]
     strat_test_set                      = []
     """print("number of test samples with severity = -1:")
     neg = np.count_nonzero(stratified_test_set_labels==-1)
@@ -76,9 +68,9 @@ def main():
     random_int_array        = np.random.randint(low=1,high=10**7,size=10)
     chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
     random_int_array        = None
-    eta_value               = 10**(-5)
+    eta_value               = 10**(-3)
     w0_                     = w0_vector(num_features=num_features, seed_value=chosen_random_int) 
-    epochs_list_            = [n for n in range(1,501)]
+    epochs_list_            = [n for n in range(1,101)]
 
     # creating a perceptron object with our data and chosen parameters
     model = perceptron(data_predictors      = stratified_training_set_predictors,
@@ -120,7 +112,7 @@ def main():
     
 
 
-    plot_decision_lines(x_min                   = dataset["eruptions"].min(),
+    """plot_decision_lines(x_min                   = dataset["eruptions"].min(),
                         x_max                   = dataset["eruptions"].max(),
                         seed                    = chosen_random_int,
                         threshold_value         = model.threshold_value,
@@ -144,7 +136,7 @@ def main():
                         title                   = "Severity of eruptions at Old Faithful geyser",
                         show                    = False
                         )
-    plt.show()
+    plt.show()"""
 
     plot_SSE_per_epoch(SSE_dict         = SSE_vector_,
                        seed             = chosen_random_int,

@@ -48,25 +48,27 @@ class perceptron:
         self.threshold_value    = threshold_value
         self.thresh_pass        = thresh_pass
         self.thresh_fail        = thresh_fail
-        self.initial_weights    = initial_weights
+        self._initial_weights    = initial_weights
         self.random_seed        = random_seed
         self.n_epochs           = n_epochs
         self.max_iterations     = None
         self.update_per_epoch   = []
+        self.SSE_per_epoch      = []
         self.accuracy           = None
         self.final_weights      = None
-        self.__current_weights  = None
-        self.__num_rows         = None
-        self.__num_columns      = None
-        self.__run_successfully = False
-        self.__success_cases    = None
-        self.__width            = 40
+        self.current_weights    = None
+        self.num_rows           = None
+        self.num_columns        = None
+        self.run_successfully   = False
+        self.success_cases      = None
+        self.SSE_accumulated    = None
+        self.width              = 40
 
 
     """def __del__(self):
         print("Perceptron object is going to be destroyed...")"""
 
-    def __get_data_dimension(self,X):
+    def get_data_dimension(self,X):
         """
         Objective:
         --------- 
@@ -80,10 +82,10 @@ class perceptron:
         -------
                     (implicit) None
         """
-        self.__num_rows         = np.shape(X)[0]
-        self.__num_columns      = np.shape(X)[1]
+        self.num_rows         = np.shape(X)[0]
+        self.num_columns      = np.shape(X)[1]
 
-    def __initialize_weights(self):
+    def initialize_weights(self):
         """
         Objective:  
         ---------
@@ -107,15 +109,15 @@ class perceptron:
                     The method checks to see if that condition is satisfied. It exits if the condition is not satisfied.
         
         """
-        self.__current_weights  = self.initial_weights
-        if self.initial_weights is None:
+        self.current_weights  = self._initial_weights
+        if self._initial_weights is None:
             if self.random_seed   == None:
                 self.random_seed  = random.randint(1,10**6)
             print("The random seed used to initialize the weight vector is {}.".format(self.random_seed))
             random.seed(self.random_seed)
             random_draw  = np.random.RandomState(seed=self.random_seed)
-            self.__current_weights  = random_draw.normal(loc=0.0, scale=0.1, size=1+self.__num_columns)
-        if len(self.__current_weights) != self.__num_columns + 1:
+            self.current_weights  = random_draw.normal(loc=0.0, scale=0.1, size=1+self.num_columns)
+        if len(self.current_weights) != self.num_columns + 1:
                 print("ERROR: Dimension of initial weight vector does not match dimension of dataset (i.e., number of columns)\n")
                 print("\n ... Exiting now.\n")
                 exit
@@ -188,8 +190,8 @@ class perceptron:
         """       
         scaled_predict_error        = self.learning_rate*(y_label-y_predicted)
         delta_w                     = np.multiply(x, scaled_predict_error)
-        self.__current_weights[0]   += scaled_predict_error
-        self.__current_weights[1:]  = np.add(delta_w,self.__current_weights[1:])
+        self.current_weights[0]   += scaled_predict_error
+        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
 
     def __update_weights_2(self, y_label, y_predicted, x):
         """
@@ -218,8 +220,8 @@ class perceptron:
         """ 
         s_error                     = self.learning_rate*(y_label-y_predicted)
         delta_w                     = np.multiply(x, s_error+0.5*s_error**2)
-        self.__current_weights[0]   += s_error
-        self.__current_weights[1:]  = np.add(delta_w,self.__current_weights[1:])
+        self.current_weights[0]   += s_error
+        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
 
     def __update_weights_3(self, y_label, y_predicted, x):
         """
@@ -248,10 +250,10 @@ class perceptron:
         s_error         = self.learning_rate*(y_label-y_predicted)
         r               = np.multiply(x, s_error)
         delta_w         = np.tanh(r)
-        self.__current_weights[0]   += s_error
-        self.__current_weights[1:]  = np.add(delta_w,self.__current_weights[1:])
+        self.current_weights[0]   += s_error
+        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
 
-    def __choose_w_update_func(self, n=1):
+    def choose_w_update_func(self, n=1):
         """
         Objective:  
         ---------
@@ -321,20 +323,23 @@ class perceptron:
                     another function to calculate and store to a list how many times the weight vector has been changed.
         """ 
         if iteration_step==0:
-            self.__initialize_weights()
-        n = iteration_step%self.__num_rows
+            self.initialize_weights()
+        n = iteration_step%self.num_rows
         x = self.data_predictors[n]
-        z = self.calculate_net_input(self.__current_weights,self.data_predictors[n])
-        y_predicted = self.evaluate_threshold_function(z)
-        y_label     = self.Y_label[n]
-        if y_predicted-y_label==0.0:
-            self.__success_cases+=1
+        z = self.calculate_net_input(self.current_weights,self.data_predictors[n])
+        y_predicted             = self.evaluate_threshold_function(z)
+        y_label                 = self.Y_label[n]
+        error                   = y_predicted-y_label
+        self.SSE_accumulated    += error**2 
+        if error    == 0.0:
+            self.success_cases+=1
         w_update_func(y_label=y_label,
                       y_predicted=y_predicted,
                       x=x)            
-        if n==self.__num_rows-1:
+        if n==self.num_rows-1:
             # calculate and store the number of times the weights were update
-            self.amend_update_per_epoch_array(iteration_step) 
+            self.amend_update_per_epoch_array(iteration_step)
+            self.amend_SSE_per_epoch_array(iteration_step)
 
 
     def __run_perceptron(self, w_update_func):
@@ -366,13 +371,14 @@ class perceptron:
                     the printing methods.
 
         """ 
-        self.__get_data_dimension(self.data_predictors)
+        self.get_data_dimension(self.data_predictors)
         iteration_step          = 0
-        self.__success_cases    = 0
-        self.max_iterations = self.__num_rows*self.n_epochs
+        self.success_cases      = 0
+        self.SSE_accumulated    = 0
+        self.max_iterations = self.num_rows*self.n_epochs
         dummy = [self.__run_perceptron_iter(iteration_step, w_update_func) for iteration_step in range(self.max_iterations)]
         if len(dummy)==self.max_iterations:
-            self.__run_successfully = True
+            self.run_successfully = True
 
     def get_optimized_weights(self):
         """
@@ -389,8 +395,8 @@ class perceptron:
                     __current_weights: a 1D numpy array of the final learned weights. 
                     -1               : if "__run_perceptron" wasn't successfully run.
         """ 
-        self.final_weights = self.__current_weights
-        return self.final_weights if self.__run_successfully else -1
+        self.final_weights = self.current_weights
+        return self.final_weights if self.run_successfully else -1
         
     def print_optimized_weights(self, n_decimals=4):
         """
@@ -409,13 +415,21 @@ class perceptron:
         -------
                     (implicit) None
         """ 
-        if self.__run_successfully:
-            m_string = '{0: <{width}}'.format("Final weight vector", width=self.__width)
-            print(m_string + ":", np.round(self.__current_weights, n_decimals))
+        if self.run_successfully:
+            m_string = '{0: <{width}}'.format("Final weight vector", width=self.width)
+            print(m_string + ":", np.round(self.current_weights, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print weights.")
 
-        
+    
+    def amend_SSE_per_epoch_array(self, i):
+        new_SSE = 0
+        if len(self.SSE_per_epoch)>0:
+            new_SSE = self.SSE_accumulated - sum(self.SSE_per_epoch)
+        else:
+            new_SSE = self.SSE_accumulated
+        self.SSE_per_epoch.append(new_SSE)
+
     def amend_update_per_epoch_array(self, i):
         """
         Objective:  
@@ -434,9 +448,9 @@ class perceptron:
         """ 
         n_update = 0
         if len(self.update_per_epoch)>0:
-            n_update = i+1- self.__success_cases - sum(self.update_per_epoch)
+            n_update = i+1- self.success_cases - sum(self.update_per_epoch)
         else:
-            n_update = self.__num_rows- self.__success_cases
+            n_update = self.num_rows- self.success_cases
         self.update_per_epoch.append(n_update)
 
 
@@ -459,9 +473,9 @@ class perceptron:
         -------
                     (implicit) None
         """ 
-        if self.__run_successfully:
-            m_string = '{0: <{width}}'.format("Success rate during training", width=self.__width)
-            print(m_string + ":", round(self.__success_cases/self.max_iterations, n_decimals))
+        if self.run_successfully:
+            m_string = '{0: <{width}}'.format("Success rate during training", width=self.width)
+            print(m_string + ":", round(self.success_cases/self.max_iterations, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print success rate.")
 
@@ -483,7 +497,7 @@ class perceptron:
                     (implicit) None
         """ 
         print("Running perceptron ...\n")
-        w_chosen_func = self.__choose_w_update_func(w_update_method)
+        w_chosen_func = self.choose_w_update_func(w_update_method)
         self.__run_perceptron(w_update_func=w_chosen_func)
         self.print_optimized_weights(n_decimals=n_digits)
         self.print_success_rate(n_decimals=n_digits)
@@ -580,6 +594,9 @@ class perceptron:
                     update_per_epoch : a 1D numpy array of integers.
         """ 
         return np.array(self.update_per_epoch)
+    
+    def get_SSE_per_epoch(self):
+        return self.SSE_per_epoch
 
     def fit_and_print_accuracy(self, X_test, Y_test, w_update_method=1, n_digits=4):
         """
@@ -605,6 +622,56 @@ class perceptron:
         weight_vector   = self.get_optimized_weights()
         Y_predicted     = self.array_predict(weight_vector, X_test)
         accuracy        = self.calculate_accuracy(Y_test, Y_predicted)
-        m_string        = '{0: <{width}}'.format("Accuracy", width=self.__width)
+        m_string        = '{0: <{width}}'.format("Accuracy", width=self.width)
         print(m_string + ":", round(accuracy,n_digits))
         print("\n")
+
+    @property
+    def initial_weights(self):
+        return self._initial_weights
+    
+    @initial_weights.setter
+    def initial_weights(self, A_np_array):
+        self._initial_weights = A_np_array
+    
+    @property
+    def max_iterations(self):
+        return self.max_iterations
+
+    @property
+    def update_per_epoch(self):
+        return self.update_per_epoch
+    
+    @property
+    def SSE_per_epoch(self):
+        return self.SSE_per_epoch
+    
+    @property
+    def accuracy(self):
+        return self.accuracy
+    
+    @property
+    def final_weights(self):
+        return self.final_weights
+    
+    @property
+    def current_weights(self):
+        return self.current_weights
+    
+    @property
+    def num_rows(self):
+        return self.num_rows
+    
+    @property
+    def num_columns(self):
+        return self.num_columns
+    
+    @property
+    def run_successfully(self):
+        return self.run_successfully
+    
+    def success_cases(self):
+        return self.success_cases
+    
+    def SSE_accumulated(self):
+        return self.SSE_accumulated*0.50

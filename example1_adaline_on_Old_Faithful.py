@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import os
-from perceptron import perceptron
+from adaline import adaline
 import matplotlib.pyplot as plt
-from job_utility import run_full_analysis, w0_vector, do_training_test_split, plot_SSE_per_epoch
+from job_utility import run_full_analysis, w0_vector, do_training_test_split, standardize, plot_SSE_per_epoch
 from job_utility import plot_data_as_binary, plot_decision_lines, plot_epoch_updates_per_method
 
 
@@ -54,13 +54,14 @@ def main():
 
     # transform training set into numpy array and split into predictors and target data
     stratified_training_set             = strat_training_set.to_numpy()
-    stratified_training_set_predictors  = stratified_training_set[:,1:3]
+    stratified_training_set_predictors  = standardize(stratified_training_set[:,1:3])
     stratified_training_set_labels      = stratified_training_set[:,3]
     strat_training_set                  = []
 
     # transform test set into numpy array and split into predictors and target data
     stratified_test_set                 = strat_test_set.to_numpy()
-    stratified_test_set_predictors      = stratified_test_set[:,1:3]
+    stratified_test_set_predictors      = standardize(stratified_test_set[:,1:3])
+    #print("standardized stratified_test_set_predictors = ", stratified_test_set_predictors)
     stratified_test_set_labels          = stratified_test_set[:,3]
     strat_test_set                      = []
     """print("number of test samples with severity = -1:")
@@ -75,13 +76,12 @@ def main():
     num_features            = np.shape(stratified_training_set_predictors)[1]
     random_int_array        = np.random.randint(low=1,high=10**7,size=10)
     chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
-    random_int_array        = None
     eta_value               = 10**(-5)
     w0_                     = w0_vector(num_features=num_features, seed_value=chosen_random_int) 
     epochs_list_            = [n for n in range(1,501)]
 
     # creating a perceptron object with our data and chosen parameters
-    model = perceptron(data_predictors      = stratified_training_set_predictors,
+    model = adaline(data_predictors      = stratified_training_set_predictors,
                        data_labels          = stratified_training_set_labels,
                        learning_rate        = eta_value,
                        threshold_value      = 0,
@@ -91,7 +91,7 @@ def main():
                        random_seed          = None,
                        n_epochs             = 1)
     
-    methods_        = [1,2,3]               # integer codes for weight updating methods  
+    methods_        = [1,2]               # integer codes for weight updating methods  
     colors_list_    = ['b', 'r', 'k']       # colors for the various weight updating methods
 
     # get epochs_update_dict_ (a dicitionary recording how many times the weight vector was updated for
@@ -120,8 +120,8 @@ def main():
     
 
 
-    plot_decision_lines(x_min                   = dataset["eruptions"].min(),
-                        x_max                   = dataset["eruptions"].max(),
+    plot_decision_lines(x_min                   = standardize(dataset["eruptions"].to_numpy()).min(),
+                        x_max                   = standardize(dataset["eruptions"].to_numpy()).max(),
                         seed                    = chosen_random_int,
                         threshold_value         = model.threshold_value,
                         Final_weights           = Final_weights_,
@@ -142,19 +142,20 @@ def main():
                         positive_plot_label     = "severe",
                         negative_plot_label     = "not severe",
                         title                   = "Severity of eruptions at Old Faithful geyser",
+                        do_standardize          = True,
                         show                    = False
                         )
     plt.show()
-
-    plot_SSE_per_epoch(SSE_dict         = SSE_vector_,
-                       seed             = chosen_random_int,
-                       epochs_list      = epochs_list_,
-                       colors_list      = colors_list_,
-                       x_label          = "n-th epoch",
-                       y_label          = "SSE",
-                       title            = "Sum of squared errors (SSE) vs epoch",
-                       show             = True)
     
+    plot_SSE_per_epoch(SSE_dict                 = SSE_vector_,
+                       seed                     = chosen_random_int,
+                       epochs_list              = epochs_list_,
+                       colors_list              = colors_list_,
+                       x_label                  = "n-th epoch",
+                       y_label                  = "SSE",
+                       title                    = "Sum of Squared Errors (SSE) vs. epoch",
+                       show                     = True
+                       )
 
 if __name__ == "__main__":
     main()
