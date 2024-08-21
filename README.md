@@ -1,6 +1,6 @@
-# my_perceptron
+# neural_classifier_models
 
-Here is an implementation of the classic Rosenblatt perceptron learning rule, a binary classification artificial neuron based on the McCulloch-Pitts (MCP) neuron.
+Here is an implementation of classic neuron classifier models like the Rosenblatt perceptron learning rule and the adaptive linear neuron (Adaline).
 
 ## Notation
 Given a matrix $A$ of dimension $R \times C$, we shall represent the $n$-th row of $A$ as $A_{n\bullet}$, and the $m$-th column as $A_{\bullet m}$. 
