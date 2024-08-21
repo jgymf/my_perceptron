@@ -27,7 +27,7 @@ def main():
                 Dataset was downloaded from https://cs.colby.edu/courses/F22/cs343/projects/p1adaline/p1adaline.html.
     """
 
-    file_path = os.path.join("neural_classifier_models","old_faithful.csv")            #user may want to change this
+    file_path = os.path.join("old_faithful.csv")            #user may want to change this
     dataset = pd.read_csv(file_path)
 
     # do a binary plot of the dataset. The binary category column is named "severe", 

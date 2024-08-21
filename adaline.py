@@ -23,20 +23,15 @@ class adaline(perceptron):
                          initial_weights=None,
                          random_seed=None,
                          n_epochs=20)
-        self.transpose_data_predictors = np.transpose(data_predictors)
-        self.success_per_epoch = []
-        self.SSE_per_epoch = []
+        self._transpose_data_predictors = np.transpose(data_predictors)
+        self._success_per_epoch = []
+        self._SSE_per_epoch = []
     """
     fUNCTIONS TO BE UNINHERITED:
     """        
-    get_update_per_epoch            = property(doc='(!) method not inherited')
     array_predict                   = property(doc='(!) method not inherited')
     single_predict                  = property(doc='(!) method not inherited')
     amend_update_per_epoch_array    = property(doc='(!) method not inherited')
-    __run_perceptron                = property(doc='(!) method not inherited')
-    __run_perceptron_iter           = property(doc='(!) method not inherited')
-    __update_weights_3              = property(doc='(!) method not inherited')
-    __update_weights_2              = property(doc='(!) method not inherited')
 
 
     def calculate_net_input(self, W, X_t):
@@ -82,29 +77,29 @@ class adaline(perceptron):
 
     def __update_weights(self,error_vector):
         delta_W                     = np.dot(error_vector, self.data_predictors)*self.learning_rate
-        self.current_weights[0]     += self.learning_rate*np.sum(error_vector)
-        self.current_weights[1:]    += delta_W
+        self._current_weights[0]     += self.learning_rate*np.sum(error_vector)
+        self._current_weights[1:]    += delta_W
 
     def __update_weights_2(self,error_vector):
         #error_vector                = np.subtract(self.Y_label,Y_predicted)
         error_vector_sech2          = np.multiply(error_vector, 1.0/(np.cosh(self.Y_label-error_vector))**2)
         delta_W                     = np.dot(error_vector_sech2, self.data_predictors)*self.learning_rate
-        self.current_weights[0]     += self.learning_rate*np.sum(error_vector_sech2)
-        self.current_weights[1:]    += delta_W
+        self._current_weights[0]     += self.learning_rate*np.sum(error_vector_sech2)
+        self._current_weights[1:]    += delta_W
 
     def __update_SSE_per_epoch(self, error_vector):
-        self.SSE_per_epoch.append(np.sum(error_vector**2)/2.0)
+        self._SSE_per_epoch.append(np.sum(error_vector**2)/2.0)
 
     def __run_adaline_iter(self, iteration_step, w_update_func, act_func):
         if iteration_step==0:
             super().initialize_weights()
             #reshape Y_label and current_weights for matrix product consistency
             np.reshape(self.Y_label, (1, len(self.Y_label)))
-            np.reshape(self.current_weights, (1, len(self.current_weights)))
-        #n = iteration_step%self.num_rows
+            np.reshape(self._current_weights, (1, len(self._current_weights)))
+        #n = iteration_step%self._num_rows
         #x = self.data_predictors[n]
-        net_input_vector     = self.calculate_net_input(self.current_weights,self.transpose_data_predictors)
-        np.reshape(net_input_vector, (1,self.num_rows))
+        net_input_vector     = self.calculate_net_input(self._current_weights,self._transpose_data_predictors)
+        np.reshape(net_input_vector, (1,self._num_rows))
         #print("shape of net_input_vector = ", np.shape(net_input_vector))
         Y_predicted          = act_func(A=net_input_vector)
         #print("Y_predicted = ", Y_predicted)
@@ -114,39 +109,41 @@ class adaline(perceptron):
         error_vector         = np.subtract(self.Y_label, Y_predicted)
         #print("error_vector = ", error_vector)
         num_false_predicts   = np.count_nonzero(np.subtract(self.Y_label,Y_predicted))
-        self.success_cases += self.num_rows - num_false_predicts
+        self._success_cases += self._num_rows - num_false_predicts
         self.__update_SSE_per_epoch(error_vector=error_vector)
         w_update_func(error_vector=error_vector)            
         self.amend_success_per_epoch_array() 
 
     def __run_adaline(self, w_update_func, act_func):
         super().get_data_dimension(self.data_predictors)
-        self.success_cases          = 0
-        self.max_iterations         = self.n_epochs
+        self._success_cases          = 0
+        self._max_iterations        = self.n_epochs
         dummy = [self.__run_adaline_iter(iteration_step=iteration_step,
                                          w_update_func=w_update_func, 
-                                         act_func=act_func) for iteration_step in range(self.max_iterations)]
-        if len(dummy)==self.max_iterations:
-            self.run_successfully = True
+                                         act_func=act_func) for iteration_step in range(self._max_iterations)]
+        if len(dummy)==self._max_iterations:
+            self._run_successfully  = True
+            self._final_weights     = self._current_weights
 
     def fit(self, w_update_method=1, n_digits=4):
         print("Running adaline ...\n")
         w_chosen_func, activation_func = self.choose_w_n_act_func(w_update_method)
         self.__run_adaline(w_update_func=w_chosen_func, act_func=activation_func)
         self.print_optimized_weights(n_decimals=n_digits)
-        self.print_success_rate(n_decimals=n_digits)        
+        self.print_success_rate(n_decimals=n_digits)
+        self._update_per_epoch = np.subtract(self._num_rows,self._success_per_epoch)      
 
     def amend_success_per_epoch_array(self):
-        self.success_per_epoch.append(self.success_cases)
+        self._success_per_epoch.append(self._success_cases)
 
-    def get_success_per_epoch(self):
-        return self.success_per_epoch
+    """def get_success_per_epoch(self):
+        return self._success_per_epoch"""
     
-    def get_SSE_per_epoch(self):
-        return self.SSE_per_epoch
+    """def get_SSE_per_epoch(self):
+        return self._SSE_per_epoch"""
     
-    def get_update_per_epoch(self):
-        return np.subtract(self.num_rows,self.success_per_epoch)
+    """def get_update_per_epoch(self):
+        return np.subtract(self._num_rows,self._success_per_epoch)"""
     
     def fit_and_print_accuracy(self, X_test, Y_test, w_update_method=1, n_digits=4):
         """
@@ -169,7 +166,7 @@ class adaline(perceptron):
                     (implicit) None
         """ 
         self.fit(w_update_method=w_update_method, n_digits=n_digits)
-        weight_vector   = self.get_optimized_weights()
+        weight_vector   = self._final_weights
         Z               = self.calculate_net_input(weight_vector, np.transpose(X_test))
         Z               = self.evaluate_activation_function(Z)
         Y_predicted     = self.evaluate_threshold_function(Z)

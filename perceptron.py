@@ -2,6 +2,9 @@ import numpy as np
 import random
 
 
+class IncompleteRunError(Exception):
+    pass
+
 class perceptron:
     def __init__(self, 
                  data_predictors,
@@ -51,22 +54,19 @@ class perceptron:
         self._initial_weights    = initial_weights
         self.random_seed        = random_seed
         self.n_epochs           = n_epochs
-        self.max_iterations     = None
-        self.update_per_epoch   = []
-        self.SSE_per_epoch      = []
-        self.accuracy           = None
-        self.final_weights      = None
-        self.current_weights    = None
-        self.num_rows           = None
-        self.num_columns        = None
-        self.run_successfully   = False
-        self.success_cases      = None
-        self.SSE_accumulated    = None
+        self._max_iterations     = None
+        self._update_per_epoch   = []
+        self._SSE_per_epoch      = []
+        self._accuracy           = None
+        self._final_weights      = None
+        self._current_weights    = None
+        self._num_rows           = None
+        self._num_columns        = None
+        self._run_successfully   = False
+        self._success_cases      = None
+        self._SSE_accumulated    = None
         self.width              = 40
 
-
-    """def __del__(self):
-        print("Perceptron object is going to be destroyed...")"""
 
     def get_data_dimension(self,X):
         """
@@ -82,8 +82,9 @@ class perceptron:
         -------
                     (implicit) None
         """
-        self.num_rows         = np.shape(X)[0]
-        self.num_columns      = np.shape(X)[1]
+        self._num_rows         = np.shape(X)[0]
+        self._num_columns      = np.shape(X)[1]
+
 
     def initialize_weights(self):
         """
@@ -109,18 +110,19 @@ class perceptron:
                     The method checks to see if that condition is satisfied. It exits if the condition is not satisfied.
         
         """
-        self.current_weights  = self._initial_weights
+        self._current_weights  = self._initial_weights
         if self._initial_weights is None:
             if self.random_seed   == None:
                 self.random_seed  = random.randint(1,10**6)
             print("The random seed used to initialize the weight vector is {}.".format(self.random_seed))
             random.seed(self.random_seed)
             random_draw  = np.random.RandomState(seed=self.random_seed)
-            self.current_weights  = random_draw.normal(loc=0.0, scale=0.1, size=1+self.num_columns)
-        if len(self.current_weights) != self.num_columns + 1:
+            self._current_weights  = random_draw.normal(loc=0.0, scale=0.1, size=1+self._num_columns)
+        if len(self._current_weights) != self._num_columns + 1:
                 print("ERROR: Dimension of initial weight vector does not match dimension of dataset (i.e., number of columns)\n")
                 print("\n ... Exiting now.\n")
                 exit
+
 
     def calculate_net_input(self, w, x):
         """
@@ -145,7 +147,8 @@ class perceptron:
         c = np.sum(np.multiply(w[1:],x))
         c += w[0]
         return c
-    
+
+
     def evaluate_threshold_function(self, z):
         """
         Objective:  
@@ -162,7 +165,8 @@ class perceptron:
         
         """       
         return (self.thresh_pass if z>=self.threshold_value else self.thresh_fail)
-    
+
+
     def __update_weights(self,y_label, y_predicted, x):
         """
         Objective:  
@@ -190,8 +194,9 @@ class perceptron:
         """       
         scaled_predict_error        = self.learning_rate*(y_label-y_predicted)
         delta_w                     = np.multiply(x, scaled_predict_error)
-        self.current_weights[0]   += scaled_predict_error
-        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
+        self._current_weights[0]   += scaled_predict_error
+        self._current_weights[1:]  = np.add(delta_w,self._current_weights[1:])
+
 
     def __update_weights_2(self, y_label, y_predicted, x):
         """
@@ -220,8 +225,9 @@ class perceptron:
         """ 
         s_error                     = self.learning_rate*(y_label-y_predicted)
         delta_w                     = np.multiply(x, s_error+0.5*s_error**2)
-        self.current_weights[0]   += s_error
-        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
+        self._current_weights[0]   += s_error
+        self._current_weights[1:]  = np.add(delta_w,self._current_weights[1:])
+
 
     def __update_weights_3(self, y_label, y_predicted, x):
         """
@@ -247,11 +253,12 @@ class perceptron:
                     where X_i is the i-th array of predictive features, and eta is the learning rate.
         
         """ 
-        s_error         = self.learning_rate*(y_label-y_predicted)
-        r               = np.multiply(x, s_error)
-        delta_w         = np.tanh(r)
-        self.current_weights[0]   += s_error
-        self.current_weights[1:]  = np.add(delta_w,self.current_weights[1:])
+        s_error                     = self.learning_rate*(y_label-y_predicted)
+        r                           = np.multiply(x, s_error)
+        delta_w                     = np.tanh(r)
+        self._current_weights[0]    += s_error
+        self._current_weights[1:]   = np.add(delta_w,self._current_weights[1:])
+
 
     def choose_w_update_func(self, n=1):
         """
@@ -324,19 +331,19 @@ class perceptron:
         """ 
         if iteration_step==0:
             self.initialize_weights()
-        n = iteration_step%self.num_rows
+        n = iteration_step%self._num_rows
         x = self.data_predictors[n]
-        z = self.calculate_net_input(self.current_weights,self.data_predictors[n])
+        z = self.calculate_net_input(self._current_weights,self.data_predictors[n])
         y_predicted             = self.evaluate_threshold_function(z)
         y_label                 = self.Y_label[n]
         error                   = y_predicted-y_label
-        self.SSE_accumulated    += error**2 
+        self._SSE_accumulated    += error**2 
         if error    == 0.0:
-            self.success_cases+=1
+            self._success_cases+=1
         w_update_func(y_label=y_label,
                       y_predicted=y_predicted,
                       x=x)            
-        if n==self.num_rows-1:
+        if n==self._num_rows-1:
             # calculate and store the number of times the weights were update
             self.amend_update_per_epoch_array(iteration_step)
             self.amend_SSE_per_epoch_array(iteration_step)
@@ -373,30 +380,14 @@ class perceptron:
         """ 
         self.get_data_dimension(self.data_predictors)
         iteration_step          = 0
-        self.success_cases      = 0
-        self.SSE_accumulated    = 0
-        self.max_iterations = self.num_rows*self.n_epochs
-        dummy = [self.__run_perceptron_iter(iteration_step, w_update_func) for iteration_step in range(self.max_iterations)]
-        if len(dummy)==self.max_iterations:
-            self.run_successfully = True
+        self._success_cases      = 0
+        self._SSE_accumulated    = 0
+        self._max_iterations = self._num_rows*self.n_epochs
+        dummy = [self.__run_perceptron_iter(iteration_step, w_update_func) for iteration_step in range(self._max_iterations)]
+        if len(dummy)==self._max_iterations:
+            self._run_successfully  = True
+            self._final_weights     = self._current_weights
 
-    def get_optimized_weights(self):
-        """
-        Objective:  
-        ---------
-                    Deliver the weight vector if "__run_perceptron" is successfully run.
-
-        Parameters:
-        ----------
-                    None
-
-        Returns:
-        -------
-                    __current_weights: a 1D numpy array of the final learned weights. 
-                    -1               : if "__run_perceptron" wasn't successfully run.
-        """ 
-        self.final_weights = self.current_weights
-        return self.final_weights if self.run_successfully else -1
         
     def print_optimized_weights(self, n_decimals=4):
         """
@@ -415,20 +406,20 @@ class perceptron:
         -------
                     (implicit) None
         """ 
-        if self.run_successfully:
+        if self._run_successfully:
             m_string = '{0: <{width}}'.format("Final weight vector", width=self.width)
-            print(m_string + ":", np.round(self.current_weights, n_decimals))
+            print(m_string + ":", np.round(self._current_weights, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print weights.")
 
     
     def amend_SSE_per_epoch_array(self, i):
         new_SSE = 0
-        if len(self.SSE_per_epoch)>0:
-            new_SSE = self.SSE_accumulated - sum(self.SSE_per_epoch)
+        if len(self._SSE_per_epoch)>0:
+            new_SSE = self._SSE_accumulated - sum(self._SSE_per_epoch)
         else:
-            new_SSE = self.SSE_accumulated
-        self.SSE_per_epoch.append(new_SSE)
+            new_SSE = self._SSE_accumulated
+        self._SSE_per_epoch.append(new_SSE)
 
     def amend_update_per_epoch_array(self, i):
         """
@@ -446,12 +437,12 @@ class perceptron:
         -------
                     (implicit) None
         """ 
-        n_update = 0
-        if len(self.update_per_epoch)>0:
-            n_update = i+1- self.success_cases - sum(self.update_per_epoch)
+        n_update        = 0
+        if len(self._update_per_epoch)>0:
+            n_update    = i+1- self._success_cases - sum(self._update_per_epoch)
         else:
-            n_update = self.num_rows- self.success_cases
-        self.update_per_epoch.append(n_update)
+            n_update    = self._num_rows- self._success_cases
+        self._update_per_epoch.append(n_update)
 
 
     def print_success_rate(self, n_decimals=4):
@@ -473,11 +464,12 @@ class perceptron:
         -------
                     (implicit) None
         """ 
-        if self.run_successfully:
+        if self._run_successfully:
             m_string = '{0: <{width}}'.format("Success rate during training", width=self.width)
-            print(m_string + ":", round(self.success_cases/self.max_iterations, n_decimals))
+            print(m_string + ":", round(self._success_cases/self._max_iterations, n_decimals))
         else:
             print("ERROR: Perceptron not run successfully. Cannot print success rate.")
+
 
     def fit(self, w_update_method=1, n_digits=4):
         """
@@ -518,9 +510,10 @@ class perceptron:
         -------
                     y_predicted : a binary value for the target feature.
         """ 
-        z = self.calculate_net_input(w,x)
+        z           = self.calculate_net_input(w,x)
         y_predicted = self.evaluate_threshold_function(z)
         return y_predicted
+
 
     def array_predict(self, w, X):
         """
@@ -540,7 +533,8 @@ class perceptron:
         N           = np.shape(X)[0]
         Y_predicted = np.array([self.single_predict(w,X[i]) for i in range(N)])
         return Y_predicted
-    
+
+
     def calculate_accuracy(self, Y_label, Y_predicted):
         """
         Objective:  
@@ -560,43 +554,9 @@ class perceptron:
         """ 
         error_array     = np.subtract(Y_label, Y_predicted)
         dim_test        = np.shape(error_array)[0]
-        self.accuracy   = (dim_test - np.count_nonzero(error_array))/dim_test
-        return self.accuracy
+        self._accuracy   = (dim_test - np.count_nonzero(error_array))/dim_test
+        return self._accuracy
     
-    def get_accuracy(self, n_decimals=4):
-        """
-        Objective:  
-        ---------
-                    Get accuracy value of model. 
-
-        Parameters:
-        ----------
-                    n_decimals   : number indicating at what decimal precision to yield the accuracy value.
-
-        Returns:
-        -------
-                    accuracy : a float between 0 and 1 (extrema included)..
-        """ 
-        return round(self.accuracy, n_decimals)
-    
-    def get_update_per_epoch(self):
-        """
-        Objective:  
-        ---------
-                    Get a list describing the number of times the weight vector was updated at each epoch run. 
-
-        Parameters:
-        ----------
-                    None
-
-        Returns:
-        -------
-                    update_per_epoch : a 1D numpy array of integers.
-        """ 
-        return np.array(self.update_per_epoch)
-    
-    def get_SSE_per_epoch(self):
-        return self.SSE_per_epoch
 
     def fit_and_print_accuracy(self, X_test, Y_test, w_update_method=1, n_digits=4):
         """
@@ -619,7 +579,7 @@ class perceptron:
                     (implicit) None
         """ 
         self.fit(w_update_method=w_update_method, n_digits=n_digits)
-        weight_vector   = self.get_optimized_weights()
+        weight_vector   = self._final_weights
         Y_predicted     = self.array_predict(weight_vector, X_test)
         accuracy        = self.calculate_accuracy(Y_test, Y_predicted)
         m_string        = '{0: <{width}}'.format("Accuracy", width=self.width)
@@ -636,42 +596,45 @@ class perceptron:
     
     @property
     def max_iterations(self):
-        return self.max_iterations
+        return self._max_iterations
 
     @property
     def update_per_epoch(self):
-        return self.update_per_epoch
+        return np.array(self._update_per_epoch)
     
     @property
     def SSE_per_epoch(self):
-        return self.SSE_per_epoch
+        return self._SSE_per_epoch
     
     @property
     def accuracy(self):
-        return self.accuracy
+        if self._run_successfully is True:
+            return self._accuracy
+        else:
+            raise IncompleteRunError("Cannot print accuracy. Perceptron did not run successfully.")
     
     @property
     def final_weights(self):
-        return self.final_weights
+        return self._final_weights
     
     @property
     def current_weights(self):
-        return self.current_weights
+        return self._current_weights
     
     @property
     def num_rows(self):
-        return self.num_rows
+        return self._num_rows
     
     @property
     def num_columns(self):
-        return self.num_columns
+        return self._num_columns
     
     @property
     def run_successfully(self):
-        return self.run_successfully
+        return self._run_successfully
     
     def success_cases(self):
-        return self.success_cases
+        return self._success_cases
     
     def SSE_accumulated(self):
-        return self.SSE_accumulated*0.50
+        return self._SSE_accumulated*0.50

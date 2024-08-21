@@ -48,11 +48,9 @@ def run_full_analysis(model_obj,
         print("\n")
         print('{:s}'.format('\u0333'.join(" Method # = {}:".format(n_method))))
         # make deep copy of object
-        Z = copy.deepcopy(model_obj)
-        Z.initial_weights   = w0
-        #print("Initial weights = ", Z.initial_weights)
-            
-        Z.n_epochs          = epochs_list[-1]
+        Z                   = copy.deepcopy(model_obj)
+        Z.initial_weights   = copy.deepcopy(w0)
+        Z.n_epochs          = copy.deepcopy(epochs_list[-1])
         # train perceptron on data, test the final weights on the test set and print accuracy to console
         Z.fit_and_print_accuracy(X_test         = X_test_data,
                                 Y_test          = Y_test_data,
@@ -61,10 +59,9 @@ def run_full_analysis(model_obj,
                                 )
         # get number of times the weight vector was updated for the interested epoch numbers 
         # and store in epochs_update_dict for the corresponding method number.
-        #print("get_update_per_epoch = ", Z.get_update_per_epoch())
-        epochs_update_dict[n_method]= copy.deepcopy(Z.get_update_per_epoch()[indices])
-        Final_weights[n_method]     = copy.deepcopy(Z.get_optimized_weights())
-        SSE_vector[n_method]        = copy.deepcopy(Z.get_SSE_per_epoch())
+        epochs_update_dict[n_method]= copy.deepcopy(Z.update_per_epoch[indices])
+        Final_weights[n_method]     = copy.deepcopy(Z.final_weights)
+        SSE_vector[n_method]        = copy.deepcopy(Z.SSE_per_epoch)
     return epochs_update_dict, Final_weights, SSE_vector
 
 

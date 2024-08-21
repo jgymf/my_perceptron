@@ -1,64 +1,78 @@
 import numpy as np
 import pandas as pd
 import os
-from adaline import adaline
+from perceptron import perceptron
 import matplotlib.pyplot as plt
-from job_utility import run_full_analysis, w0_vector, do_training_test_split, standardize, plot_SSE_per_epoch
+from job_utility import run_full_analysis, w0_vector, do_training_test_split, plot_SSE_per_epoch
 from job_utility import plot_data_as_binary, plot_decision_lines, plot_epoch_updates_per_method
-
 
 
 def main():
     """
     Objective:
     ----------
-                
+                Employ the perceptron algorithm to tell whether an iris is an "Iris setosa" or "Iris-versicolo".
 
     Description of the dataset
     --------------------------
-                
+                The dataset has the following columns:
+                    # Column        Column name         dytpe   \n
+                        0           Id                  numeric \n
+                        1           SepalLengthCm       numeric \n
+                        2           SepalWidthCm        numeric \n
+                        3           PetalLengthCm       numeric \n
+                        4           PetalWidthCm        numeric \n
+                        5           Species             string  \n
+                Dataset was downloaded from https://www.kaggle.com/datasets/uciml/iris.
+    """    
+
+    file_path = os.path.join("Iris.csv")
+    Dataset = pd.read_csv(file_path)
+    print(Dataset.head())
+    print("\n")
+    print(Dataset.describe())
+    print("\n")
+    print(Dataset.info())
+    print("\n")
+    #print(dataset["Species"].value_counts())
+
+
     """
+    The first 50 entries of the dataset are classified as 'Iris-setosa'
+    The subsequent 50 entries are classified as 'Iris-versicolor'
+    The last 50 entries are 'Iris-virginica'
+    We want to do a perceptron training on the first 100 entries, so we have a binary classification.
+    We create a copy of that slice below to avoid SettingWIthCopy warnings.
+    We also convert the string 'Iris-setosa' into integer -1, and 'Iris-versicolor' into 1.
+    """
+    dataset = Dataset.head(100).copy()
+    dataset["Species"].replace({'Iris-setosa':-1, 'Iris-versicolor':1}, inplace=True)
+    #print(dataset["Species"])
 
-    file_path = os.path.join("neural_classifier_models","prime_classification_data.csv")            #user may want to change this
-    dataset = pd.read_csv(file_path)
-
-    # do a binary plot of the dataset. The binary category column is named "severe", 
-    # and values are either +1 or -1.
-    """P1 = plot_data_as_binary(data=dataset,
-                            predictive_column_names=["eruptions", "waiting"],
-                            target_column_name="severe",
-                            thresh_pass=1,
-                            thresh_fail=-1,
-                            x_label="eruptions",
-                            y_label="waiting",
-                            positive_plot_label="severe",
-                            negative_plot_label="not severe",
-                            title="Severity of eruptions at Old Faithful geyser"
-                             )"""
-    
     # do a stratified splitting of the dataset into training ans test sets, using the column "severe" as base
     # for the stratified splitting.
     strat_training_set, strat_test_set  = do_training_test_split(data           = dataset,
-                                                                split_by_column = "is_prime",
+                                                                split_by_column = "Species",
                                                                 num_splits      = 1,
                                                                 split_ratio     = 0.2,
-                                                                random_state    = 1024)
+                                                                random_state    = 443)
+    
+    #define predictor columns ('SepalLengthCm' (col 1) and 'PetalLengthCm' (col 3)), and target column ('Species' (col 5))
+    predictors_column_num               = [1,3]
+    target_column_num                   = 5
 
     # transform training set into numpy array and split into predictors and target data
     stratified_training_set             = strat_training_set.to_numpy()
-    stratified_training_set_predictors  = stratified_training_set[:,2:66]
-    stratified_training_set_labels      = stratified_training_set[:,66]
+
+    stratified_training_set_predictors  = stratified_training_set[:,predictors_column_num]
+    stratified_training_set_labels      = stratified_training_set[:,target_column_num]
     strat_training_set                  = []
 
     # transform test set into numpy array and split into predictors and target data
     stratified_test_set                 = strat_test_set.to_numpy()
-    stratified_test_set_predictors      = stratified_test_set[:,2:66]
-    stratified_test_set_labels          = stratified_test_set[:,66]
+    stratified_test_set_predictors      = stratified_test_set[:,predictors_column_num]
+    stratified_test_set_labels          = stratified_test_set[:,target_column_num]
     strat_test_set                      = []
-    """print("number of test samples with severity = -1:")
-    neg = np.count_nonzero(stratified_test_set_labels==-1)
-    print(neg)
-    print("expected accuracy = ", neg/len(stratified_test_set_labels)," or ", 1-neg/len(stratified_test_set_labels))"""
 
     # setting additional parameters before running the perceptron
     # eta_value is the learning rate
@@ -66,13 +80,15 @@ def main():
     # epochs_list_ is the list of epoch numbers we are interested in
     num_features            = np.shape(stratified_training_set_predictors)[1]
     random_int_array        = np.random.randint(low=1,high=10**7,size=10)
-    chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
-    eta_value               = 10**(-2)
+    #chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
+    chosen_random_int       = 1
+    random_int_array        = None
+    eta_value               = 10**(-1)
     w0_                     = w0_vector(num_features=num_features, seed_value=chosen_random_int) 
-    epochs_list_            = [n for n in range(1,51)]
+    epochs_list_            = [n for n in range(1,11)]
 
     # creating a perceptron object with our data and chosen parameters
-    model = adaline(data_predictors      = stratified_training_set_predictors,
+    model = perceptron(data_predictors      = stratified_training_set_predictors,
                        data_labels          = stratified_training_set_labels,
                        learning_rate        = eta_value,
                        threshold_value      = 0,
@@ -81,8 +97,8 @@ def main():
                        initial_weights      = w0_,
                        random_seed          = None,
                        n_epochs             = 1)
-    
-    methods_        = [1,2]               # integer codes for weight updating methods  
+
+    methods_        = [1,2,3]               # integer codes for weight updating methods  
     colors_list_    = ['b', 'r', 'k']       # colors for the various weight updating methods
 
     # get epochs_update_dict_ (a dicitionary recording how many times the weight vector was updated for
@@ -95,9 +111,8 @@ def main():
                                                             w0          = w0_,
                                                             X_test_data = stratified_test_set_predictors,
                                                             Y_test_data = stratified_test_set_labels,
-                                                            n_decimals  = 6)   
-
-
+                                                            n_decimals  = 6)  
+    
     plot_epoch_updates_per_method(epochs_list       = epochs_list_,
                                   epochs_update_dict= epochs_update_dict_,
                                   learning_rate     = model.learning_rate,
@@ -108,45 +123,41 @@ def main():
                                   title             = None,
                                   show              = True
                                   )
-    
 
-
-    """plot_decision_lines(x_min                   = standardize(dataset["eruptions"].to_numpy()).min(),
-                        x_max                   = standardize(dataset["eruptions"].to_numpy()).max(),
+    plot_decision_lines(x_min                   = dataset["SepalLengthCm"].min(),
+                        x_max                   = dataset["SepalLengthCm"].max(),
                         seed                    = chosen_random_int,
                         threshold_value         = model.threshold_value,
                         Final_weights           = Final_weights_,
                         epochs_update_dict      = epochs_update_dict_,
                         colors_list             = colors_list_,
-                        x_label                 = "eruptions (min)",
-                        y_label                 = "waiting (min)",
+                        x_label                 = "SepalLength (cm)",
+                        y_label                 = "PetalLength (cm)",
                         title                   = None,
                         show                    = False)
     
     plot_data_as_binary(data                    = dataset,
-                        predictive_column_names = ["eruptions", "waiting"],
-                        target_column_name      = "severe",
+                        predictive_column_names = ["SepalLengthCm", "PetalLengthCm"],
+                        target_column_name      = "Species",
                         thresh_pass             = 1,
                         thresh_fail             = -1,
-                        x_label                 = "eruptions (min)",
-                        y_label                 = "waiting (min)",
-                        positive_plot_label     = "severe",
-                        negative_plot_label     = "not severe",
-                        title                   = "Severity of eruptions at Old Faithful geyser",
-                        do_standardize          = True,
+                        x_label                 = "SepalLength (cm)",
+                        y_label                 = "PetalLength (cm)",
+                        positive_plot_label     = "Iris-versicolor",
+                        negative_plot_label     = "Iris-setosa",
+                        title                   = "Classification of Iris into Iris-setosa and Iris-versicolor",
                         show                    = False
                         )
-    plt.show()"""
-    
-    plot_SSE_per_epoch(SSE_dict                 = SSE_vector_,
-                       seed                     = chosen_random_int,
-                       epochs_list              = epochs_list_,
-                       colors_list              = colors_list_,
-                       x_label                  = "n-th epoch",
-                       y_label                  = "SSE",
-                       title                    = "Sum of Squared Errors (SSE) vs. epoch",
-                       show                     = True
-                       )
+    plt.show()
 
-if __name__ == "__main__":
+    plot_SSE_per_epoch(SSE_dict         = SSE_vector_,
+                       seed             = chosen_random_int,
+                       epochs_list      = epochs_list_,
+                       colors_list      = colors_list_,
+                       x_label          = "n-th epoch",
+                       y_label          = "SSE",
+                       title            = "Sum of squared errors (SSE) vs epoch",
+                       show             = True)
+    
+if __name__== "__main__":
     main()

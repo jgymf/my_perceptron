@@ -27,7 +27,7 @@ def main():
                 Dataset was downloaded from https://cs.colby.edu/courses/F22/cs343/projects/p1adaline/p1adaline.html.
     """
 
-    file_path = os.path.join("neural_classifier_models","old_faithful.csv")            #user may want to change this
+    file_path = os.path.join("old_faithful.csv")            #user may want to change this
     dataset = pd.read_csv(file_path)
 
     # do a binary plot of the dataset. The binary category column is named "severe", 
@@ -76,7 +76,7 @@ def main():
     num_features            = np.shape(stratified_training_set_predictors)[1]
     random_int_array        = np.random.randint(low=1,high=10**7,size=10)
     chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
-    eta_value               = 10**(-5)
+    eta_value               = 10**(-1)
     w0_                     = w0_vector(num_features=num_features, seed_value=chosen_random_int) 
     epochs_list_            = [n for n in range(1,501)]
 

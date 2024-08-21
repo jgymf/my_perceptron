@@ -26,7 +26,7 @@ def main():
                 Dataset was downloaded from https://www.kaggle.com/datasets/uciml/iris.
     """    
 
-    file_path = os.path.join("neural_classifier_models","Iris.csv")
+    file_path = os.path.join("Iris.csv")
     Dataset = pd.read_csv(file_path)
     print(Dataset.head())
     print("\n")
@@ -83,7 +83,7 @@ def main():
     chosen_random_int       = np.random.choice(random_int_array, size=1)[0]
     #chosen_random_int       = 1
     random_int_array        = None
-    eta_value               = 10**(-2)
+    eta_value               = 10**(-3)
     w0_                     = w0_vector(num_features=num_features, seed_value=chosen_random_int) 
     epochs_list_            = [n for n in range(1,101)]
 
