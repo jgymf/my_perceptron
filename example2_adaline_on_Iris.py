@@ -11,7 +11,7 @@ def main():
     """
     Objective:
     ----------
-                Employ the perceptron algorithm to tell whether an iris is an "Iris setosa" or "Iris-versicolo".
+                Employ the adaline algorithm to tell whether an iris is an "Iris setosa" or "Iris-versicolo".
 
     Description of the dataset
     --------------------------

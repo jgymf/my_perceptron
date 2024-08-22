@@ -12,7 +12,7 @@ def main():
     """
     Objective:
     ----------
-                In this example, we use the perceptron algorithm to classify whether an eruption
+                In this example, we use the adaline algorithm to classify whether an eruption
                 at the Old Faithful geyser in Yellowstone National Park, Wyoming, USA, is "severe" (coded as +1)
                 or "not severe" (coded as -1).
 
@@ -82,14 +82,14 @@ def main():
 
     # creating a perceptron object with our data and chosen parameters
     model = adaline(data_predictors      = stratified_training_set_predictors,
-                       data_labels          = stratified_training_set_labels,
-                       learning_rate        = eta_value,
-                       threshold_value      = 0,
-                       thresh_pass          = 1.0,
-                       thresh_fail          = -1.0,
-                       initial_weights      = w0_,
-                       random_seed          = None,
-                       n_epochs             = 1)
+                    data_labels          = stratified_training_set_labels,
+                    learning_rate        = eta_value,
+                    threshold_value      = 0,
+                    thresh_pass          = 1.0,
+                    thresh_fail          = -1.0,
+                    initial_weights      = w0_,
+                    random_seed          = None,
+                    n_epochs             = 1)
     
     methods_        = [1,2]               # integer codes for weight updating methods  
     colors_list_    = ['b', 'r', 'k']       # colors for the various weight updating methods
@@ -99,12 +99,12 @@ def main():
     # Final_weights_ (a list of 1D numpy arrays, where each array is the final weight vector learned 
     # from the perceptron for a particlar method) after running the perceptron
     epochs_update_dict_, Final_weights_, SSE_vector_ = run_full_analysis(model_obj   = model,
-                                                            methods     = methods_,
-                                                            epochs_list = epochs_list_,
-                                                            w0          = w0_,
-                                                            X_test_data = stratified_test_set_predictors,
-                                                            Y_test_data = stratified_test_set_labels,
-                                                            n_decimals  = 6)   
+                                                                         methods     = methods_,
+                                                                         epochs_list = epochs_list_,
+                                                                         w0          = w0_,
+                                                                         X_test_data = stratified_test_set_predictors,
+                                                                         Y_test_data = stratified_test_set_labels,
+                                                                         n_decimals  = 6)   
 
 
     plot_epoch_updates_per_method(epochs_list       = epochs_list_,

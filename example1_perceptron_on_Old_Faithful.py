@@ -63,10 +63,6 @@ def main():
     stratified_test_set_predictors      = stratified_test_set[:,1:3]
     stratified_test_set_labels          = stratified_test_set[:,3]
     strat_test_set                      = []
-    """print("number of test samples with severity = -1:")
-    neg = np.count_nonzero(stratified_test_set_labels==-1)
-    print(neg)
-    print("expected accuracy = ", neg/len(stratified_test_set_labels)," or ", 1-neg/len(stratified_test_set_labels))"""
 
     # setting additional parameters before running the perceptron
     # eta_value is the learning rate
@@ -99,12 +95,12 @@ def main():
     # Final_weights_ (a list of 1D numpy arrays, where each array is the final weight vector learned 
     # from the perceptron for a particlar method) after running the perceptron
     epochs_update_dict_, Final_weights_, SSE_vector_ = run_full_analysis(model_obj   = model,
-                                                            methods     = methods_,
-                                                            epochs_list = epochs_list_,
-                                                            w0          = w0_,
-                                                            X_test_data = stratified_test_set_predictors,
-                                                            Y_test_data = stratified_test_set_labels,
-                                                            n_decimals  = 6)   
+                                                                         methods     = methods_,
+                                                                         epochs_list = epochs_list_,
+                                                                         w0          = w0_,
+                                                                         X_test_data = stratified_test_set_predictors,
+                                                                         Y_test_data = stratified_test_set_labels,
+                                                                         n_decimals  = 6)   
 
 
     plot_epoch_updates_per_method(epochs_list       = epochs_list_,
@@ -130,7 +126,8 @@ def main():
                         x_label                 = "eruptions (min)",
                         y_label                 = "waiting (min)",
                         title                   = None,
-                        show                    = False)
+                        show                    = False
+                        )
     
     plot_data_as_binary(data                    = dataset,
                         predictive_column_names = ["eruptions", "waiting"],
@@ -146,14 +143,15 @@ def main():
                         )
     plt.show()
 
-    plot_SSE_per_epoch(SSE_dict         = SSE_vector_,
-                       seed             = chosen_random_int,
-                       epochs_list      = epochs_list_,
-                       colors_list      = colors_list_,
-                       x_label          = "n-th epoch",
-                       y_label          = "SSE",
-                       title            = "Sum of squared errors (SSE) vs epoch",
-                       show             = True)
+    plot_SSE_per_epoch(SSE_dict                 = SSE_vector_,
+                       seed                     = chosen_random_int,
+                       epochs_list              = epochs_list_,
+                       colors_list              = colors_list_,
+                       x_label                  = "n-th epoch",
+                       y_label                  = "SSE",
+                       title                    = "Sum of squared errors (SSE) vs epoch",
+                       show                     = True
+                       )
     
 
 if __name__ == "__main__":

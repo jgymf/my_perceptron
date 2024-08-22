@@ -4,6 +4,24 @@ import numpy as np
 from perceptron import perceptron
 
 class adaline(perceptron):
+    """
+        This is a Perceptron Binary Calssifier.
+        
+        Parameters:
+        ----------
+        *data_predictors    = a numpy array of predictors to used for training the perceptron.
+                              The columns of the array represent the features, while the rows represent different instances of the data.
+        *data_labels        = a numpy array of labels to be used for training the perceptron
+        *learning_rate      = rate at which the algorithm learns. Default value is 10^(-3).
+        *threshold_value    = boundary value in the step function. Default value is 0.
+        *thresh_pass        = one of the possible values the step function can assume. Default value is 1.
+        *thresh_fail        = the other possible value the step function can have. Default value is -1.
+        *initial_weights    = a numpy 1D array of weights the user would like the algorithm to start with.
+                              If not provided, the algorithm creates one with random entries, according to a normal distribution centered on 0.
+                              Note that the dimension of the this numpy array must be = 1 + n_C, where n_C is the number of columns.
+        *random_seed        = Seed for the random generation of the initial_weights vector.
+        *n_epochs           = number of times the algorithm is supposed to repeat training on the provided training dataset. Default value is 20.
+    """
     def __init__(self,
                  data_predictors,
                  data_labels,
@@ -27,7 +45,7 @@ class adaline(perceptron):
         self._success_per_epoch = []
         self._SSE_per_epoch = []
     """
-    fUNCTIONS TO BE UNINHERITED:
+    FUNCTIONS TO BE UNINHERITED:
     """        
     array_predict                   = property(doc='(!) method not inherited')
     single_predict                  = property(doc='(!) method not inherited')
@@ -38,9 +56,15 @@ class adaline(perceptron):
         return np.add(np.matmul(W[1:],X_t),W[0])
         
     def evaluate_activation_function(self, A):
+        """
+        Activation function for method_1.
+        """
         return A
         
     def evaluate_activation_function_2(self, A):
+        """
+        Activation function for method_2.
+        """
         return np.tanh(A)
 
     def evaluate_threshold_function(self, Z):
@@ -50,7 +74,8 @@ class adaline(perceptron):
         """
         Objective:  
         ---------
-                    Decide which weight updating rule to use.
+                    Decide which weight updating rule (w_func) and which activation function (act_func)
+                    to use.
 
         Parameters:
         ----------
@@ -68,20 +93,23 @@ class adaline(perceptron):
         elif n==2:
             w_func      = self.__update_weights_2
             act_func    = self.evaluate_activation_function_2
-        #elif n==3:
-        #    w_func = self.__update_weights_3
         else:
             print("ERROR: Chosen option for weight updating function is not valid. Choose either 1, 2 or 3.\n")
             exit
         return w_func, act_func
 
     def __update_weights(self,error_vector):
+        """
+        Weights update function for method_1.
+        """
         delta_W                     = np.dot(error_vector, self.data_predictors)*self.learning_rate
         self._current_weights[0]     += self.learning_rate*np.sum(error_vector)
         self._current_weights[1:]    += delta_W
 
     def __update_weights_2(self,error_vector):
-        #error_vector                = np.subtract(self.Y_label,Y_predicted)
+        """
+        Weights update function for method_2.
+        """
         error_vector_sech2          = np.multiply(error_vector, 1.0/(np.cosh(self.Y_label-error_vector))**2)
         delta_W                     = np.dot(error_vector_sech2, self.data_predictors)*self.learning_rate
         self._current_weights[0]     += self.learning_rate*np.sum(error_vector_sech2)
@@ -93,21 +121,12 @@ class adaline(perceptron):
     def __run_adaline_iter(self, iteration_step, w_update_func, act_func):
         if iteration_step==0:
             super().initialize_weights()
-            #reshape Y_label and current_weights for matrix product consistency
             np.reshape(self.Y_label, (1, len(self.Y_label)))
             np.reshape(self._current_weights, (1, len(self._current_weights)))
-        #n = iteration_step%self._num_rows
-        #x = self.data_predictors[n]
         net_input_vector     = self.calculate_net_input(self._current_weights,self._transpose_data_predictors)
         np.reshape(net_input_vector, (1,self._num_rows))
-        #print("shape of net_input_vector = ", np.shape(net_input_vector))
         Y_predicted          = act_func(A=net_input_vector)
-        #print("Y_predicted = ", Y_predicted)
-        #print("Y_predicted shape = ", np.shape(Y_predicted))
-        #print("Y_label = ", self.Y_label)
-        #print("Y_label shape = ", np.shape(self.Y_label))
         error_vector         = np.subtract(self.Y_label, Y_predicted)
-        #print("error_vector = ", error_vector)
         num_false_predicts   = np.count_nonzero(np.subtract(self.Y_label,Y_predicted))
         self._success_cases += self._num_rows - num_false_predicts
         self.__update_SSE_per_epoch(error_vector=error_vector)
@@ -135,15 +154,6 @@ class adaline(perceptron):
 
     def amend_success_per_epoch_array(self):
         self._success_per_epoch.append(self._success_cases)
-
-    """def get_success_per_epoch(self):
-        return self._success_per_epoch"""
-    
-    """def get_SSE_per_epoch(self):
-        return self._SSE_per_epoch"""
-    
-    """def get_update_per_epoch(self):
-        return np.subtract(self._num_rows,self._success_per_epoch)"""
     
     def fit_and_print_accuracy(self, X_test, Y_test, w_update_method=1, n_digits=4):
         """
