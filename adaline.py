@@ -5,7 +5,7 @@ from perceptron import perceptron
 
 class adaline(perceptron):
     """
-        This is a Perceptron Binary Calssifier.
+        This is a Binary Calssifier.
         
         Parameters:
         ----------
