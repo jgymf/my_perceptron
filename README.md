@@ -63,5 +63,30 @@ Here, the updating rules are:
 
 The hyperbolic tangent function here introduces a high degree of non-linearity in the updating of the weight vector. Note, however, that for $\eta \cdot \epsilon(i) X^T_{i\bullet} \to 0 $, Methods 2 and 3 essentially reduce to Method 1.
 
+## Adaptive Linear Neuron (Adaline)
+The Adaline approach was first introduced by Bernard Widrow and Tedd Hoff. Unlike the Rosenblatt's perceptron where the weight update is done sequentially sweeping through the samples in the dataset, here, the weights are updated as a batch in the form of a vector $\mathbf{W}$, reducing the process of weight updating to vector operations. Thus, whenever $\mathbf{W}$ is updated indicates a passing of an epoch. This is an important component of the reason why the Adaline method is much faster than Rosenblatt's perceptron. 
+
+Furthermore, with Adaline the weights are updated using the following linear activation function (instead of a step-function, like in the perceptron model):
+```math
+\phi(\mathbf{Z}(k)) = \mathbf{Z}(k)
+```
+where, $\mathbf{Z}(k)$, the input value vector at the $k$-th epoch, is defined as:
+```math
+\mathbf{Z}(k) =  w_o(k) \cdot \mathbf{I}_{1 \times N} + \mathbf{W}(k) \cdot \mathbf{X}^T
+```
+where $w_o(k)$ is the bias unit at the $k$-th epoch, $\mathbf{W}(k)$ is the weight vector at the $k$-th epoch, $\mathbf{X}$ is the sample dataset and $\mathbf{I}_{1 \times N}$ is a $1 \times N$ vector with entries all equal to 1. Recall that $X$ is a $N \times M$ matrix, where each of the $M$ columns represents a feature (or degree of freedom) and each of the $N$ rows represents a sample. The weight vector $\mathbf{W}(k)$ is of dimension $1 \times M$, hence the input value vector $\mathbf{Z}(k)$ is of dimension $1 \times N$.
+
+Like any supervised machine learning algorithm, we set aside a fraction of the target feature to use when training the algorithm. Let $\mathbf{Y}_{label}$ be the vector representing the target feature corresponding to the sample data $\mathbf{X}$ that we are going to use for the training. 
+
+$\mathbf{Y}_{label}$ is, thus, a $1 \times N$ vector.
+
+The role of the input value vector, $\mathbf{Z}(k)$, in the Adaline neural network is a very important one. Indeed, its entries are taken as equal to the neural network's prediction of the targeted feature for the corresponding sample. For example, at the $k$-th epoch, the $n$-th entry of  $\mathbf{Z}(k)$ is regarded as the neural network's prediction of the target feature for the $n$-th sample (or row) of $X$. If we indicate the neural network's prediction for the target feature at the $k$-th epoch as $\mathbf{Y}(k)_{predicted}$, then, for the Adaline neural network,
+```math
+\mathbf{Y}(k)_{predicted} = \mathbf{Z}(k) \ .
+```
+With this in mind, the objective function employed is the sum of squared errors (SSE), $J\left(\mathbf{W}(k)\right)$:
+```math
+J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)^2 \ .
+``` 
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
