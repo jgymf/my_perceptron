@@ -80,13 +80,17 @@ Like any supervised machine learning algorithm, we set aside a fraction of the t
 
 $\mathbf{Y}_{label}$ is, thus, a $1 \times N$ vector.
 
-The role of the input value vector, $\mathbf{Z}(k)$, in the Adaline neural network is a very important one. Indeed, its entries are taken as equal to the neural network's prediction of the targeted feature for the corresponding sample. For example, at the $k$-th epoch, the $n$-th entry of  $\mathbf{Z}(k)$ is regarded as the neural network's prediction of the target feature for the $n$-th sample (or row) of $X$. If we indicate the neural network's prediction for the target feature at the $k$-th epoch as $\mathbf{Y}(k)_{predicted}$, then, for the Adaline neural network,
+The role of the vector output of the activation function, $\phi(\mathbf{Z}(k))$, in the Adaline neural network is a very important one. Indeed, its entries are taken as equal to the neural network's prediction of the targeted feature for the corresponding sample. For example, at the $k$-th epoch, the $n$-th entry of  $\phi(\mathbf{Z}(k))$ is regarded as the neural network's prediction of the target feature for the $n$-th sample (or row) of $X$. If we indicate the neural network's prediction for the target feature at the $k$-th epoch as $\mathbf{Y}(k)_{predicted}$, then, for the Adaline neural network,
 ```math
-\mathbf{Y}(k)_{predicted} = \mathbf{Z}(k) \ .
+\mathbf{Y}(k)_{predicted} = \phi(\mathbf{Z}(k)) \ .
 ```
 With this in mind, the objective function employed is the sum of squared errors (SSE), $J\left(\mathbf{W}(k)\right)$:
 ```math
-J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)^2 \ .
-``` 
+J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)^2 
+```
+which we may also rewrite as:
+```math
+J\left(\mathbf{W}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^2 = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^2
+```
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
