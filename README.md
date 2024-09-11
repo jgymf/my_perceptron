@@ -91,9 +91,20 @@ J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y
 which we may also rewrite as:
 ```math
 \begin{split}
-J\left(\mathbf{W}(k) \right) & = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^T  \\
+J\left(w_o(k),\mathbf{W}(k) \right) & = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^T  \\
 & = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)\cdot \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^T
 \end{split}
+```
+Note that because the activation function $\phi$ is linear and continuous in $w_o(k)$ and $\mathbf{W}(k)$, the cost function $J(w_o(k),\mathbf{W}(k))$ becomes differentiable with respect to $w_o(k)$ and $\mathbf{W}(k)$. Moreover, the cost function $J$ is also convex in  $w_o(k)$ and $\mathbf{W}(k)$ so we can use the gradient descent method to the optimal $w_o(k)$ and $\mathbf{W}(k)$ which minimize it. To that end, what we need are the gradients of $J$ in the direction of $\mathbf{W}(k)$ and $w_o$. Once we have the gradients, we can update the bias and the weight vector as follows:
+```math
+\begin{split}
+\mathbf{W}(k+1) & = \mathbf{W}(k) + \Delta \mathbf{W}(k)\\
+w_o(k+1) & = w_o(k) + \Delta w_o(k)
+\end{split}
+```
+where,
+```math
+\Delta \mathbf{W}(k) = -\eta \cdot \nabla_{\mathbf{W(k)}} J = -\eta \cdot \left[\left(\mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \mathbf{X}\right]^T
 ```
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
