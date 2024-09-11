@@ -1,6 +1,6 @@
 # neural_classifier_models
 
-Here is an implementation of classic neuron classifier models like the Rosenblatt perceptron learning rule and the adaptive linear neuron (Adaline).
+Below are the implementation of classic neuron classifier models like the Rosenblatt perceptron learning rule and the adaptive linear neuron (Adaline). We also present some variations to these classic machine learning algorithms.
 
 ## Notation
 Given a matrix $A$ of dimension $R \times C$, we shall represent the $n$-th row of $A$ as $A_{n\bullet}$, and the $m$-th column as $A_{\bullet m}$. 
@@ -65,7 +65,7 @@ The hyperbolic tangent function here introduces a high degree of non-linearity i
 
 ## Adaptive Linear Neuron (Adaline)
 ### Theory and Implementation. Method I.
-The Adaline approach was first introduced by Bernard Widrow and Tedd Hoff. Unlike the Rosenblatt's perceptron where the weight update is done sequentially sweeping through the samples in the dataset, here, the weights are updated as a batch in the form of a vector $\mathbf{W}$, reducing the process of weight updating to vector operations. Thus, whenever $\mathbf{W}$ is updated indicates a passing of an epoch. This is an important component of the reason why the Adaline method is much faster than Rosenblatt's perceptron. 
+The Adaline approach was first introduced by Bernard Widrow and Tedd Hoff. Unlike the Rosenblatt's perceptron where the weight update is done sequentially sweeping through the samples in the dataset, here, the weights are updated as a batch in the form of a vector $\mathbf{W}$, reducing the process of weight updating to vector operations (hence, ideal to run on GPUs). Thus, whenever $\mathbf{W}$ is updated indicates a passing of an epoch. This is an important component of the reason why the Adaline method is much faster than Rosenblatt's perceptron. 
 
 Furthermore, with Adaline the weights are updated using the following linear activation function (instead of a step-function, like in the perceptron model):
 ```math
@@ -117,6 +117,13 @@ This method is an experimental approach I devised. It is a variation on Method I
 ```math
 \phi(\mathbf{Z}(k)) = \text{tanh}(\mathbf{Z}(k))
 ```
-
+which leads to the following expressions for $\Delta \mathbf{W}(k)$ and $\Delta w_o(k)$:
+```math
+\begin{split}
+\Delta \mathbf{W}(k) & := \eta \cdot \left[\mathbf{Y}_{label} - \text{tanh}(\mathbf{Z}(k)) \right]\cdot \text{sech}(\mathbf{Z}(k)) \left[\text{sech}(\mathbf{Z}(k)) \right]^T \cdot \mathbf{X}\\
+\Delta w_o(k) & := \eta \cdot \left[\mathbf{Y}_{label} - \text{tanh}(\mathbf{Z}(k)) \right]\cdot \text{sech}(\mathbf{Z}(k)) \left[\text{sech}(\mathbf{Z}(k)) \right]^T \cdot \mathbf{I}^T_{1 \times N}
+\end{split}
+```
+In the expressions above, the hyperbolic function operators tanh and sech operate element-wise on their argument vectors (SIMD).  
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
