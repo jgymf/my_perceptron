@@ -86,11 +86,14 @@ The role of the vector output of the activation function, $\phi(\mathbf{Z}(k))$,
 ```
 With this in mind, the objective function employed is the sum of squared errors (SSE), $J\left(\mathbf{W}(k)\right)$:
 ```math
-J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)^2 
+J\left(\mathbf{Y}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)\cdot  \left( \mathbf{Y}_{label} - \mathbf{Y}(k)_{predicted} \right)^T
 ```
 which we may also rewrite as:
 ```math
-J\left(\mathbf{W}(k) \right) = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^2 = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^2
+\begin{split}
+J\left(\mathbf{W}(k) \right) & = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^T  \\
+& = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)\cdot \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^T
+\end{split}
 ```
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
