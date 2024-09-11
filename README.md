@@ -64,6 +64,7 @@ Here, the updating rules are:
 The hyperbolic tangent function here introduces a high degree of non-linearity in the updating of the weight vector. Note, however, that for $\eta \cdot \epsilon(i) X^T_{i\bullet} \to 0 $, Methods 2 and 3 essentially reduce to Method 1.
 
 ## Adaptive Linear Neuron (Adaline)
+### Theory and Implementation. Method I.
 The Adaline approach was first introduced by Bernard Widrow and Tedd Hoff. Unlike the Rosenblatt's perceptron where the weight update is done sequentially sweeping through the samples in the dataset, here, the weights are updated as a batch in the form of a vector $\mathbf{W}$, reducing the process of weight updating to vector operations. Thus, whenever $\mathbf{W}$ is updated indicates a passing of an epoch. This is an important component of the reason why the Adaline method is much faster than Rosenblatt's perceptron. 
 
 Furthermore, with Adaline the weights are updated using the following linear activation function (instead of a step-function, like in the perceptron model):
@@ -92,10 +93,10 @@ which we may also rewrite as:
 ```math
 \begin{split}
 J\left(w_o(k),\mathbf{W}(k) \right) & = \frac{1}{2} \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \left( \mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)^T  \\
-& = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)\cdot \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^T
+& = \frac{1}{2} \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)\cdot \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T \right)^T 
 \end{split}
 ```
-Note that because the activation function $\phi$ is linear and continuous in $w_o(k)$ and $\mathbf{W}(k)$, the cost function $J(w_o(k),\mathbf{W}(k))$ becomes differentiable with respect to $w_o(k)$ and $\mathbf{W}(k)$. Moreover, the cost function $J$ is also convex in  $w_o(k)$ and $\mathbf{W}(k)$ so we can use the gradient descent method to the optimal $w_o(k)$ and $\mathbf{W}(k)$ which minimize it. To that end, what we need are the gradients of $J$ in the direction of $\mathbf{W}(k)$ and $w_o$. Once we have the gradients, we can update the bias and the weight vector as follows:
+Note that because the activation function $\phi$ is linear and continuous in $w_o(k)$ and $\mathbf{W}(k)$, the cost function $J(w_o(k),\mathbf{W}(k))$ becomes differentiable with respect to $w_o(k)$ and $\mathbf{W}(k)$. Moreover, the cost function $J$ is also convex in  $w_o(k)$ and $\mathbf{W}(k)$ so we can use the gradient descent method to the optimal $w_o(k)$ and $\mathbf{W}(k)$ which minimize it. To that end, what we need are:  i) the gradient of $J$ in the direction of $\mathbf{W}(k)$, i.e. $\nabla_{\mathbf{W(k)}} J$, and ii) the gradient of $J$ in the direction of $w_o(k)$, i.e. $\nabla_{w_o(k)} J$. Once we have the said gradients at a given epoch, we can update the bias and the weight vector for the next epoch as follows:
 ```math
 \begin{split}
 \mathbf{W}(k+1) & = \mathbf{W}(k) + \Delta \mathbf{W}(k)\\
@@ -104,7 +105,18 @@ w_o(k+1) & = w_o(k) + \Delta w_o(k)
 ```
 where,
 ```math
-\Delta \mathbf{W}(k) = -\eta \cdot \nabla_{\mathbf{W(k)}} J = -\eta \cdot \left[\left(\mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \mathbf{X}\right]^T
+\begin{split}
+\Delta \mathbf{W}(k) & := -\eta \cdot \left[\nabla_{\mathbf{W(k)}} J\right]^T = \eta \cdot \left[\left(\mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \mathbf{X}\right] = \eta \cdot \left[ \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T\right) \cdot \mathbf{X} \right]\\
+\Delta w_o(k) & := -\eta \cdot \left[\nabla_{w_o(k)} J\right] = \eta \cdot \left[\left(\mathbf{Y}_{label} - \phi(\mathbf{Z}(k)) \right)\cdot \mathbf{I}^T_{1 \times N}\right] = \eta \cdot \left[ \left( \mathbf{Y}_{label} - w_o(k) \cdot \mathbf{I}_{1 \times N} - \mathbf{W}(k) \cdot \mathbf{X}^T\right) \cdot \mathbf{I}^T_{1 \times N} \right]
+\end{split}
 ```
+and where $\eta$, as usual, represents the learning rate. The factor $\frac{1}{2}$ in the definition of the cost function $J\left(w_o(k),\mathbf{W}(k) \right)$ was introduced to get rid of the factor $2$ which would have appeared in expression for the gradients of $J$ in the direction of $w_o(k)$ and $\mathbf{W}(k)$.
+
+### Method II: A variation on Method I.
+This method is an experimental approach I devised. It is a variation on Method I whereby I define the activation function as:
+```math
+\phi(\mathbf{Z}(k)) = \text{tanh}(\mathbf{Z}(k))
+```
+
 ## Applications
 We have applied our implementation to two classic classification problems: determining the severity ("severe" or "not severe") of the eruptions of the Old Faithful geyser (see file "example1.py") and the Iris classification problem (i.e., determining whether a flower is "Iris-setosa" or "Iris-versicolor").
